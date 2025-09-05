@@ -1,2 +1,4 @@
 __pycache__/
 *.pyc
+saved_models/
+.ipynb_checkpoints/
