@@ -6,22 +6,28 @@ This module contains the model architecture for the Fashion MNIST classification
 import torch 
 import torch.nn as nn
 
-def simple_model(out_channels, kernel_size, input_size = (1, 28, 28)):  
+import torch
+import torch.nn as nn
 
-    H_in, W_in = input_size[1], input_size[2]
-    H_conv, W_conv = H_in - (kernel_size - 1), W_in - (kernel_size - 1)
+class Simple_Model(nn.Module):
+    def __init__(self, out_channels, kernel_size, input_size=(1, 28, 28), num_classes=10):
+        super().__init__()
+        self.H_in, self.W_in = input_size[1], input_size[2]
+        self.H_conv, self.W_conv = self.H_in - (kernel_size - 1), self.W_in - (kernel_size - 1)
 
-    model = nn.Sequential(nn.Conv2d(in_channels = input_size[0],
-                                    out_channels = out_channels,
-                                    kernel_size = kernel_size),
-                        nn.ReLU(),
+        self.conv = nn.Conv2d(in_channels=input_size[0],
+                              out_channels=out_channels,
+                              kernel_size=kernel_size)
+        self.relu = nn.ReLU()
+        self.pool = nn.MaxPool2d(kernel_size=2, stride=2)
+        self.flatten = nn.Flatten(start_dim=1)
+        self.fc = nn.Linear(in_features=out_channels * (self.H_conv // 2) * (self.W_conv // 2),
+                            out_features=num_classes)
 
-                        nn.MaxPool2d(kernel_size = 2,
-                                    stride = 2), # Reduce the spatial dimensions by a factor of 2
-
-                        nn.Flatten(start_dim = 1), # Flatten all dimensions but batch
-
-                        nn.Linear(in_features =  out_channels * (H_conv // 2) * (W_conv // 2),
-                                    out_features = 10)) # 10 output classes
-    
-    return model
+    def forward(self, x):
+        x = self.conv(x)
+        x = self.relu(x)
+        x = self.pool(x)
+        x = self.flatten(x)
+        x = self.fc(x)
+        return x
