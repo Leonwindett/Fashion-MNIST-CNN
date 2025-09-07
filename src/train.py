@@ -65,19 +65,18 @@ def train_model(model, optimiser, loss_fcn, train_dloader, val_dloader, epoch, d
     if print_training is True:
         print(f"[Epoch {epoch+1:2d}] Training accuracy: {train_acc*100.0:05.2f}%, Validation accuracy: {val_acc*100.0:05.2f}%\n")
 
-        return tot_loss/len(train_dloader.dataset), valid_loss/len(val_dloader.dataset), val_acc
+        
+    return tot_loss/len(train_dloader.dataset), valid_loss/len(val_dloader.dataset), val_acc
 
 
-
-
-def tune_model(model, train_dloader, val_dloader, model_name, device=torch.device("mps"),
+def tune_model(model_class, train_dloader, val_dloader, model_name, device=torch.device("mps"),
                n_trials=20, project_name='my_project', hyperparam_space=None, epochs=5):
 
     best_model_wts = None
     best_score = -float('inf')
 
     # Get model constructor argument names to filter params
-    model_init_args = inspect.signature(model.__init__).parameters
+    model_init_args = inspect.signature(model_class.__init__).parameters
 
     def sample_trial(trial, space):
         params = {}
@@ -96,7 +95,7 @@ def tune_model(model, train_dloader, val_dloader, model_name, device=torch.devic
         params = sample_trial(trial, hyperparam_space)
         model_params = {k: v for k, v in params.items() if k in model_init_args}
         
-        model = model(**model_params).to(device)
+        model = model_class(**model_params).to(device)
         lr = params.get("lr", 1e-3)
         weight_decay = params.get("weight_decay", 0.0)
         optimizer_name = params.get("optimizer", "AdamW")
@@ -112,21 +111,22 @@ def tune_model(model, train_dloader, val_dloader, model_name, device=torch.devic
         loss_fcn = nn.CrossEntropyLoss()
 
         # Start wandb run
-        wandb.init(project=project_name, config=params, reinit=True)
+        wandb.init(project=project_name, config=params, reinit=True, name=f"{model_name}_trial_{trial.number}", dir=os.path.join("..", "wandb_logs"))
 
         # Training loop
         for epoch in range(epochs):
             train_loss, val_loss, val_acc = train_model(model, optimizer, loss_fcn, train_dloader, val_dloader, epoch, device, print_training=False)
 
             # Log metrics
-            wandb.log({"epoch": epoch, "val_acc": val_acc, "train_loss": train_loss, "val_loss": val_loss})
+            wandb.log({"val_acc": val_acc, "train_loss": train_loss, "val_loss": val_loss})
 
         # Save best model
         if val_acc > best_score:
             best_score = val_acc
             best_model_wts = copy.deepcopy(model.state_dict())
 
-            run_folder =  os.path.join("saved_models", model_name)
+            # Save into parent directory, under saved_models/<model_name>
+            run_folder = os.path.join("..", "saved_models", model_name)
             os.makedirs(run_folder, exist_ok=True)
 
             # Save best model (overwrites previous)
@@ -138,7 +138,6 @@ def tune_model(model, train_dloader, val_dloader, model_name, device=torch.devic
             with open(params_path, "w") as f:
                 json.dump(params, f, indent=2)
 
-            wandb.run.dir = os.path.join(run_folder, "wandb_logs")
 
         wandb.finish()
         return val_acc
@@ -149,4 +148,5 @@ def tune_model(model, train_dloader, val_dloader, model_name, device=torch.devic
 
     print(f"Best trial params: {study.best_trial.params}")
     print(f"Best validation accuracy: {best_score:.4f}")
-    return best_model_wts, study.best_trial.params
+    
+    return

@@ -2,10 +2,6 @@
 This module contains the model architecture for the Fashion MNIST classification task.
 """
 
-
-import torch 
-import torch.nn as nn
-
 import torch
 import torch.nn as nn
 
