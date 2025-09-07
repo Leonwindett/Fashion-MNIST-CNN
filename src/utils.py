@@ -3,7 +3,7 @@ import torch
 from torchvision import datasets, transforms
 from torch.utils.data import DataLoader
 
-def load_MNIST_data(batch_size, random_seed = torch.Generator().manual_seed(18)):
+def load_MNIST_data(batch_size, num_workers = 2, random_seed = torch.Generator().manual_seed(18)):
     
     # Define a transform to normalize the data
     transform = transforms.Compose([transforms.ToTensor(),
@@ -19,8 +19,8 @@ def load_MNIST_data(batch_size, random_seed = torch.Generator().manual_seed(18))
 
 
     # Create data loaders for training and testing
-    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
-    validation_loader = DataLoader(validation_dataset, batch_size=batch_size, shuffle=True)
-    test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
+    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=num_workers)
+    validation_loader = DataLoader(validation_dataset, batch_size=batch_size, shuffle=True, num_workers=num_workers)
+    test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False, num_workers=num_workers)
 
     return train_loader, validation_loader, test_loader
