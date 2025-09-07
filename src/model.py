@@ -27,3 +27,7 @@ class Simple_Model(nn.Module):
         x = self.flatten(x)
         x = self.fc(x)
         return x
+    
+
+    # For more advanced architectures: https://www.reddit.com/r/learnmachinelearning/comments/1d4txo8/fashionmnist_best_accuracy/ 
+    # Also add more convolutional layers with wider channels. Look into expanding the data set with rotations, translations etc. 

@@ -13,7 +13,7 @@ import inspect
 from torch import autocast
 
 
-def train_model(model, optimiser, loss_fcn, train_dloader, val_dloader, epoch, device, print_training=True):
+def train_model(model, optimiser, loss_fcn, train_dloader, val_dloader, epochs, device, print_training=True):
     model.to(device)
     model.train()
     tot_loss = 0
@@ -21,7 +21,7 @@ def train_model(model, optimiser, loss_fcn, train_dloader, val_dloader, epoch, d
     all_train_pred = []
     all_train_true = []
 
-    for X_train, y_train in tqdm(train_dloader, desc=f"Epoch {epoch+1}", leave=False):
+    for X_train, y_train in tqdm(train_dloader, desc=f"Epoch {epochs+1}", leave=False):
         X_train, y_train = X_train.to(device), y_train.to(device)
 
         optimiser.zero_grad()
@@ -63,7 +63,7 @@ def train_model(model, optimiser, loss_fcn, train_dloader, val_dloader, epoch, d
     val_acc = accuracy_score(all_valid_true.numpy(), valid_pred_labels.numpy())
 
     if print_training:
-        print(f"[Epoch {epoch+1:2d}] Training accuracy: {train_acc*100:.2f}%, Validation accuracy: {val_acc*100:.2f}%")
+        print(f"[Epoch {epochs+1:2d}] Training accuracy: {train_acc*100:.2f}%, Validation accuracy: {val_acc*100:.2f}%")
 
     # Average losses over dataset size
     train_loss_avg = tot_loss / len(train_dloader.dataset)
