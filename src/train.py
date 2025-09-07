@@ -4,7 +4,7 @@ from sklearn.metrics import accuracy_score
 from tqdm import tqdm
 
 
-def train_model(model, optimiser, loss_fcn, train_dloader, val_dloader, epoch, print_training = True):
+def train_model(model, optimiser, loss_fcn, train_dloader, val_dloader, epoch, device, print_training = True):
 
     model.train()
     tot_loss = 0
@@ -13,13 +13,17 @@ def train_model(model, optimiser, loss_fcn, train_dloader, val_dloader, epoch, p
     all_train_true = []
     for X_train, y_train in tqdm(train_dloader ,desc=f"Epoch {epoch+1}", leave=False):
         # Ensure the input retains its 4D shape for Conv2d
-        X_train = X_train
+        X_train, y_train = X_train.to(device), y_train.to(device)
         y_pred = model(X_train)
         optimiser.zero_grad()
         loss = loss_fcn(y_pred, y_train)
         tot_loss += loss.item()
         loss.backward()
         optimiser.step()
+
+        y_pred = y_pred.cpu()
+        y_train = y_train.cpu()
+
         all_train_pred = np.append(all_train_pred, y_pred.detach().numpy(), axis=0) if len(all_train_pred) > 0 else y_pred.detach().numpy()
         all_train_true = np.append(all_train_true, y_train.detach().numpy(), axis=0) if len(all_train_true) > 0 else y_train.detach().numpy()
 
@@ -35,13 +39,15 @@ def train_model(model, optimiser, loss_fcn, train_dloader, val_dloader, epoch, p
 
 
     for X_valid, y_valid in val_dloader:
-            # Ensure the input retains its 4D shape for Conv2d
-            X_valid = X_valid
-            y_valid_pred = model(X_valid)
-            vloss = loss_fcn(y_valid_pred, y_valid)
-            valid_loss += vloss.item()
-            all_valid_pred = np.append(all_valid_pred, y_valid_pred.detach().numpy(), axis=0) if len(all_valid_pred) > 0 else y_valid_pred.detach().numpy()
-            all_valid_true = np.append(all_valid_true, y_valid.detach().numpy(), axis=0) if len(all_valid_true) > 0 else y_valid.detach().numpy()
+        # Ensure the input retains its 4D shape for Conv2d
+        X_valid, y_valid = X_valid.to(device), y_valid.to(device)
+        y_valid_pred = model(X_valid)
+        vloss = loss_fcn(y_valid_pred, y_valid)
+        valid_loss += vloss.item()
+        y_valid_pred = y_valid_pred.cpu()
+        y_valid = y_valid.cpu()
+        all_valid_pred = np.append(all_valid_pred, y_valid_pred.detach().numpy(), axis=0) if len(all_valid_pred) > 0 else y_valid_pred.detach().numpy()
+        all_valid_true = np.append(all_valid_true, y_valid.detach().numpy(), axis=0) if len(all_valid_true) > 0 else y_valid.detach().numpy()
 
     all_valid_pred = np.array(all_valid_pred)
     y_valid_pred = torch.argmax(torch.tensor(all_valid_pred), dim=1)
