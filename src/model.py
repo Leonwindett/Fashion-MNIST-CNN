@@ -29,5 +29,86 @@ class Simple_Model(nn.Module):
         return x
     
 
-    # For more advanced architectures: https://www.reddit.com/r/learnmachinelearning/comments/1d4txo8/fashionmnist_best_accuracy/ 
+    # For more advanced architectures: https://www.reddit.com/r/learnmachinelearning/comments/1d4txo8/fashionmnist_best_accuracy/ ie GaP
     # Also add more convolutional layers with wider channels. Look into expanding the data set with rotations, translations etc. 
+
+
+class FashionMNISTModel(nn.Module):
+    def __init__(self):
+        super().__init__()
+        
+        self.layer1 = nn.Sequential(
+            nn.Conv2d(1, 64, kernel_size=3, padding=1),
+            nn.ReLU(),
+            nn.BatchNorm2d(64)
+        )
+        
+        self.layer2 = nn.Sequential(
+            nn.Conv2d(64, 64, kernel_size=3, padding=1),
+            nn.ReLU(),
+            nn.BatchNorm2d(64)
+        )
+        
+        self.layer3 = nn.Sequential(
+            nn.Conv2d(64, 128, kernel_size=3, stride=2, padding=1),
+            nn.ReLU(),
+            nn.BatchNorm2d(128)
+        )
+        
+        self.layer4 = nn.Sequential(
+            nn.Conv2d(128, 128, kernel_size=3, padding=1),
+            nn.ReLU(),
+            nn.BatchNorm2d(128)
+        )
+        
+        self.layer5 = nn.Sequential(
+            nn.Conv2d(128, 128, kernel_size=3, padding=1),
+            nn.ReLU(),
+            nn.BatchNorm2d(128)
+        )
+        
+        self.layer6 = nn.Sequential(
+            nn.Conv2d(128, 256, kernel_size=3, stride=2, padding=1),
+            nn.ReLU(),
+            nn.BatchNorm2d(256)
+        )
+        
+        self.layer7 = nn.Sequential(
+            nn.Conv2d(256, 256, kernel_size=3, padding=1),
+            nn.ReLU(),
+            nn.BatchNorm2d(256)
+        )
+        
+        self.layer8 = nn.Sequential(
+            nn.Conv2d(256, 256, kernel_size=3, padding=1),
+            nn.ReLU(),
+            nn.BatchNorm2d(256)
+        )
+        
+        self.layer9 = nn.Sequential(
+            nn.Conv2d(256, 256, kernel_size=3, stride=2, padding=1),
+            nn.ReLU(),
+            nn.BatchNorm2d(256)
+        )
+        
+        self.global_avg_pool = nn.AdaptiveAvgPool2d(1)
+        self.batchnorm1d = nn.BatchNorm1d(256)
+        self.dropout = nn.Dropout(0.5)
+        self.fc = nn.Linear(256, 10)
+
+    def forward(self, x):
+        x = self.layer1(x)
+        x = self.layer2(x)
+        x = self.layer3(x)
+        x = self.layer4(x)
+        x = self.layer5(x)
+        x = self.layer6(x)
+        x = self.layer7(x)
+        x = self.layer8(x)
+        x = self.layer9(x)
+        x = self.global_avg_pool(x)
+        x = x.view(x.size(0), -1)
+        x = self.batchnorm1d(x)
+        x = self.dropout(x)
+        x = self.fc(x)
+        return x

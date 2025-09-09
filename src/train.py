@@ -13,7 +13,7 @@ import inspect
 from torch import autocast
 
 
-def train_model(model, optimiser, loss_fcn, train_dloader, val_dloader, epochs, device, print_training=True):
+def train_model(model, optimiser, loss_fcn, train_dloader, val_dloader, epochs, device, scaler, scheduler, print_training=True):
     model.to(device)
     model.train()
     tot_loss = 0
@@ -29,9 +29,14 @@ def train_model(model, optimiser, loss_fcn, train_dloader, val_dloader, epochs, 
         with autocast(device_type='mps'): # Use FP16 for heavy matmuls 
             y_pred = model(X_train)
             loss = loss_fcn(y_pred, y_train)
-            tot_loss += loss.item()
-        loss.backward()
-        optimiser.step()
+        tot_loss += loss.item()
+
+        scaler.scale(loss).backward()
+        scaler.step(optimiser)
+        scaler.update()
+
+        scheduler.step()
+        
 
         all_train_pred.append(y_pred.detach().cpu())
         all_train_true.append(y_train.detach().cpu())
